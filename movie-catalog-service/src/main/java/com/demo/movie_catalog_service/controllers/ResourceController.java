@@ -4,6 +4,8 @@ import com.demo.movie_catalog_service.models.CatalogItem;
 import com.demo.movie_catalog_service.models.Movie;
 import com.demo.movie_catalog_service.models.Rating;
 import com.demo.movie_catalog_service.models.UserRating;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +26,13 @@ public class ResourceController {
     RestTemplate restTemplate;
 
     @GetMapping("/{userId}")
+    @HystrixCommand(fallbackMethod = "getCatalogFallback",
+        commandProperties = {
+            @HystrixProperty(name = "execution.isolation.thread.timeOutInMilliseconds",value = "2000"),
+            @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold",value = "5"),
+            @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds",value = "50")
+        }
+    )
     public List<CatalogItem> getCatalog(@PathVariable String userId){
 
         UserRating ratings= restTemplate.getForObject("http://rating-service/api/ratings/users/"+userId, UserRating.class);
@@ -32,6 +41,12 @@ public class ResourceController {
             Movie movie=restTemplate.getForObject("http://movie-info-service/api/movies/"+r.getMovieId(),Movie.class);
             return new CatalogItem(movie.getName(), "After movie", r.getRating());
         } ).collect(Collectors.toList());
+
+    }
+
+    public List<CatalogItem> getCatalogFallback(){
+
+        return Arrays.asList();
 
     }
 }
