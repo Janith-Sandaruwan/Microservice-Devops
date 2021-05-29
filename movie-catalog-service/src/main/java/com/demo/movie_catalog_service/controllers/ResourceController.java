@@ -28,7 +28,7 @@ public class ResourceController {
     @GetMapping("/{userId}")
     @HystrixCommand(fallbackMethod = "getCatalogFallback",
         commandProperties = {
-            @HystrixProperty(name = "execution.isolation.thread.timeOutInMilliseconds",value = "2000"),
+            @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds",value = "2000"),
             @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold",value = "5"),
             @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds",value = "50")
         }
@@ -44,7 +44,7 @@ public class ResourceController {
 
     }
 
-    public List<CatalogItem> getCatalogFallback(){
+    public List<CatalogItem> getCatalogFallback(@PathVariable String userId){
 
         return Arrays.asList();
 
